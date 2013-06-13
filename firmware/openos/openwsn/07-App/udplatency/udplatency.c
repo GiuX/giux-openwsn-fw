@@ -31,7 +31,7 @@ void udplatency_timer();
 
 void udplatency_init() {
    // run only on client
-   if (!(idmanager_getMyID(ADDR_16B)->addr_16b[0] == 0x16 && idmanager_getMyID(ADDR_16B)->addr_16b[1] == 0x2d)) return;
+   if (!(idmanager_getMyID(ADDR_16B)->addr_16b[0] == 0x08 && idmanager_getMyID(ADDR_16B)->addr_16b[1] == 0xb6)) return;
    seqNum = 0;
    udplatency_vars.timerId    = opentimers_start(UDPLATENCYPERIOD,
                                             TIMER_PERIODIC,TIME_MS,

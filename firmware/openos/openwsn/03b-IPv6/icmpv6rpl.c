@@ -161,10 +161,11 @@ void icmpv6rpl_receive(OpenQueueEntry_t* msg) {
    switch (icmpv6code) {
       
       case IANA_ICMPv6_RPL_DIO:
-         if (idmanager_getIsBridge()==TRUE) {
-            // stop here if I'm in bridge mode
-            break; // break, don't return
-         }
+// commented in order to allow bridge updating neighbors ranks
+//         if (idmanager_getIsBridge()==TRUE) {
+//            // stop here if I'm in bridge mode
+//            break; // break, don't return
+//         }
          
          // update neighbor table
          neighbors_indicateRxDIO(msg);

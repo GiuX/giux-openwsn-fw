@@ -17,8 +17,8 @@ void idmanager_init() {
    idmanager_vars.isDAGroot            = FALSE;
    idmanager_vars.isBridge             = FALSE;
    idmanager_vars.myPANID.type         = ADDR_PANID;
-   idmanager_vars.myPANID.panid[0]     = 0x03;
-   idmanager_vars.myPANID.panid[1]     = 0x03;
+   idmanager_vars.myPANID.panid[0]     = 0x01;
+   idmanager_vars.myPANID.panid[1]     = 0x01;
 
    idmanager_vars.myPrefix.type        = ADDR_PREFIX;
    memset(&idmanager_vars.myPrefix.prefix[0], 0x00, sizeof(idmanager_vars.myPrefix.prefix));
@@ -26,6 +26,12 @@ void idmanager_init() {
 
    eui64_get(idmanager_vars.my64bID.addr_64b);
    packetfunctions_mac64bToMac16b(&idmanager_vars.my64bID,&idmanager_vars.my16bID);
+
+   // jam setting
+   if (idmanager_getMyID(ADDR_16B)->addr_16b[1] == 0xad) {
+       idmanager_vars.isBridge  = TRUE;
+       idmanager_vars.isDAGroot = TRUE;
+   }
 }
 
 bool idmanager_getIsDAGroot() {

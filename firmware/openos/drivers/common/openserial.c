@@ -552,25 +552,23 @@ void isr_openserial_tx() {
 // executed in ISR, called from scheduler.c
 void isr_openserial_rx() {
    uint8_t rxbyte;
-   uint8_t inputBufFill;
    INTERRUPT_DECLARATION();
 
    // stop if I'm not in input mode
    if (openserial_vars.mode!=MODE_INPUT) {
       return;
    }
+   // all the serial reception is protected by interrupt
+   DISABLE_INTERRUPTS();
 
    // read byte just received
    rxbyte = uart_readByte();
-   //keep lenght
-   inputBufFill=openserial_vars.inputBufFill;
 
    if        (
                 openserial_vars.busyReceiving==FALSE  &&
                 openserial_vars.lastRxByte==HDLC_FLAG &&
                 rxbyte!=HDLC_FLAG
               ) {
-      DISABLE_INTERRUPTS();
       // start of frame
 
       // I'm now receiving
@@ -581,17 +579,14 @@ void isr_openserial_rx() {
 
       // add the byte just received
       inputHdlcWrite(rxbyte);
-      ENABLE_INTERRUPTS();
    } else if (
                 openserial_vars.busyReceiving==TRUE   &&
                 rxbyte!=HDLC_FLAG
              ) {
-      DISABLE_INTERRUPTS();
       // middle of frame
 
       // add the byte just received
       inputHdlcWrite(rxbyte);
-      ENABLE_INTERRUPTS();
 
       if (openserial_vars.inputBufFill+1>SERIAL_INPUT_BUFFER_SIZE) {
          // input buffer overflow
@@ -606,23 +601,22 @@ void isr_openserial_rx() {
                 openserial_vars.busyReceiving==TRUE   &&
                 rxbyte==HDLC_FLAG
               ) {
-         DISABLE_INTERRUPTS();
          // end of frame
 
          // finalize the HDLC frame
          inputHdlcClose();
          openserial_vars.busyReceiving      = FALSE;
-         ENABLE_INTERRUPTS();
 
          if (openserial_vars.inputBufFill==0) {
             // invalid HDLC frame
             openserial_printError(COMPONENT_OPENSERIAL,ERR_WRONG_CRC_INPUT,
-                                  (errorparameter_t)inputBufFill,
+                                  (errorparameter_t)openserial_vars.inputBufFill,
                                   (errorparameter_t)0);
 
          }
    }
    openserial_vars.lastRxByte = rxbyte;
+   ENABLE_INTERRUPTS();
 }
 
 

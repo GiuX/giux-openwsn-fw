@@ -70,7 +70,7 @@ void openserial_init() {
    openserial_vars.inputEscaping       = FALSE;
    openserial_vars.inputBufFill        = 0;
 
-   // output
+   // ouput
    openserial_vars.outputBufFilled     = FALSE;
    openserial_vars.outputBufIdxR       = 0;
    openserial_vars.outputBufIdxW       = 0;
@@ -352,13 +352,6 @@ void openserial_stop() {
    DISABLE_INTERRUPTS();
    openserial_vars.mode=MODE_OFF;
    ENABLE_INTERRUPTS();
-   //the inputBuffer has to be reset if it is not reset where the data is read.
-   //or the function openserial_getInputBuffer is called (which resets the buffer)
-   if (busyReceiving==TRUE){
-      openserial_printError(COMPONENT_OPENSERIAL,ERR_BUSY_RECEIVING,
-                                  (errorparameter_t)0,
-                                  (errorparameter_t)inputBufFill);
-   }
 
    if (busyReceiving == FALSE && inputBufFill > 0) {
           DISABLE_INTERRUPTS();
@@ -384,23 +377,21 @@ void openserial_stop() {
                 icmpv6echo_trigger();
                 break;
              case SERFRAME_PC2MOTE_TRIGGERSERIALECHO:
-            //echo function must reset input buffer after reading the data.
                 openserial_echo(&openserial_vars.inputBuf[1],inputBufFill-1);
                 break;
              default:
                 openserial_printError(COMPONENT_OPENSERIAL,ERR_UNSUPPORTED_COMMAND,
                                       (errorparameter_t)cmdByte,
                                       (errorparameter_t)0);
-            //reset here as it is not being reset in any other callback
-            DISABLE_INTERRUPTS();
-            openserial_vars.inputBufFill = 0;
-            ENABLE_INTERRUPTS();
-            break;
-      }
+                DISABLE_INTERRUPTS();
+                openserial_vars.inputBufFill = 0;
+                ENABLE_INTERRUPTS();
+                break;
+          }
    }
-      DISABLE_INTERRUPTS();
-      openserial_vars.inputBufFill = 0;
-      ENABLE_INTERRUPTS();
+   DISABLE_INTERRUPTS();
+   openserial_vars.inputBufFill = 0;
+   ENABLE_INTERRUPTS();
 }
 
 /**
@@ -552,7 +543,6 @@ void isr_openserial_tx() {
 // executed in ISR, called from scheduler.c
 void isr_openserial_rx() {
    uint8_t rxbyte;
-   uint8_t inputBufFill;
    INTERRUPT_DECLARATION();
 
    // stop if I'm not in input mode
@@ -562,8 +552,6 @@ void isr_openserial_rx() {
 
    // read byte just received
    rxbyte = uart_readByte();
-   //keep lenght
-   inputBufFill=openserial_vars.inputBufFill;
 
    if        (
                 openserial_vars.busyReceiving==FALSE  &&
@@ -616,8 +604,8 @@ void isr_openserial_rx() {
 
          if (openserial_vars.inputBufFill==0) {
             // invalid HDLC frame
-            openserial_printError(COMPONENT_OPENSERIAL,ERR_WRONG_CRC_INPUT,
-                                  (errorparameter_t)inputBufFill,
+            openserial_printError(COMPONENT_OPENSERIAL,ERR_INVALIDSERIALFRAME,
+                                  (errorparameter_t)0,
                                   (errorparameter_t)0);
 
          }
@@ -629,14 +617,9 @@ void isr_openserial_rx() {
 //======== SERIAL ECHO =============
 
 void openserial_echo(uint8_t* buf, uint8_t bufLen) {
-   INTERRUPT_DECLARATION();
    // echo back what you received
    openserial_printData(
       buf,
       bufLen
    );
-   
-    DISABLE_INTERRUPTS();
-    openserial_vars.inputBufFill = 0;
-    ENABLE_INTERRUPTS();
 }

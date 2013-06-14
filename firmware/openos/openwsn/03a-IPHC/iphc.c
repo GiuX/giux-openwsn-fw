@@ -56,13 +56,14 @@ error_t iphc_sendFromForwarding(OpenQueueEntry_t *msg, ipv6_header_iht ipv6_head
    nh=IPHC_NH_INLINE;
    
    // error checking
-   if (idmanager_getIsBridge()==TRUE &&
-      packetfunctions_isAllRoutersMulticast(&(msg->l3_destinationAdd))==FALSE) {
-      openserial_printCritical(COMPONENT_IPHC,ERR_BRIDGE_MISMATCH,
-                            (errorparameter_t)0,
-                            (errorparameter_t)0);
-      return E_FAIL;
-   }
+   // comment this lines allowing DAG to send packet from upper layer (testing router mode, not entirely implemented yet)
+//   if (idmanager_getIsBridge()==TRUE &&
+//      packetfunctions_isAllRoutersMulticast(&(msg->l3_destinationAdd))==FALSE) {
+//      openserial_printCritical(COMPONENT_IPHC,ERR_BRIDGE_MISMATCH,
+//                            (errorparameter_t)0,
+//                            (errorparameter_t)0);
+//      return E_FAIL;
+//   }
    
    //discard the packet.. hop limit reached.
    if (ipv6_header.hop_limit==0) {

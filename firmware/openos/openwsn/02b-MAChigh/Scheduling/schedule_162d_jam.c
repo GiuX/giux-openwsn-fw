@@ -73,21 +73,8 @@ void schedule_init() {
    memset(&addr[3], 0x00, 1);
    memset(&addr[4], 0x00, 1);
    memset(&addr[5], 0x15, 1);
-   memset(&addr[6], 0x16, 1);
-   memset(&addr[7], 0x2d, 1);
-
-   // not-shared RX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
-      FALSE,                   // shared?
-      0,                       // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    // no update but insert
-   );
-   running_slotOffset++;
+   memset(&addr[6], 0x08, 1);
+   memset(&addr[7], 0xad, 1);
 
    // not-shared TX unicast slot
    memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
@@ -121,6 +108,19 @@ void schedule_init() {
       schedule_addActiveSlot(
       running_slotOffset,      // slot offset
       CELLTYPE_TX,             // type of slot
+      FALSE,                   // shared?
+      0,                       // channel offset
+      &temp_neighbor,          // neighbor
+      FALSE                    // no update but insert
+   );
+   running_slotOffset++;
+
+   // not-shared RX unicast slot
+   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
+   temp_neighbor.type             = ADDR_64B;
+      schedule_addActiveSlot(
+      running_slotOffset,      // slot offset
+      CELLTYPE_RX,             // type of slot
       FALSE,                   // shared?
       0,                       // channel offset
       &temp_neighbor,          // neighbor

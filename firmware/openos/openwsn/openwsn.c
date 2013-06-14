@@ -47,6 +47,7 @@
 #include "udpprint.h"
 //#include "udprand.h"
 #include "udplatency.h"
+//#include "netlatency.h"
 //#include "udpstorm.h"
 //-- CoAP
 #include "rleds.h"
@@ -116,6 +117,7 @@ void openwsn_init() {
    udpprint_init();
    //udprand_init();
    udplatency_init();
+   //netlatency_init();
    //udpstorm_init();
    //-- CoAP
    //rleds_init();

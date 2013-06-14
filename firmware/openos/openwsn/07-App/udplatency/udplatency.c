@@ -107,9 +107,9 @@ void udplatency_task(){
    seqNum++;
 
    // close timer when test finish
-//   if (seqNum > NUMPKTTEST) {
-//       opentimers_stop(udplatency_vars.timerId);
-//   }
+   if (seqNum > NUMPKTTEST) {
+       opentimers_stop(udplatency_vars.timerId);
+   }
 }
 
 void udplatency_timer() {

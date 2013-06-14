@@ -44,8 +44,8 @@ void schedule_init() {
          CELLTYPE_ADV,            // type of slot
          FALSE,                   // shared?
          0,                       // channel offset
-         &temp_neighbor,           // neighbor
-         FALSE                     //no update but insert
+         &temp_neighbor,          // neighbor
+         FALSE                    // no update but insert
       );
       running_slotOffset++;
    } 
@@ -60,7 +60,7 @@ void schedule_init() {
          TRUE,                    // shared?
          0,                       // channel offset
          &temp_neighbor,          // neighbor
-         FALSE                    //no update but insert
+         FALSE                    // no update but insert
       );
       running_slotOffset++;
    }
@@ -73,7 +73,7 @@ void schedule_init() {
       FALSE,                      // shared?
       0,                          // channel offset
       &temp_neighbor,             // neighbor
-      FALSE                       //no update but insert
+      FALSE                       // no update but insert
    );
    running_slotOffset++;
    /*

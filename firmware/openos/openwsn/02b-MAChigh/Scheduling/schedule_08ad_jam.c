@@ -21,7 +21,6 @@ void schedule_init() {
    uint8_t         i;
    slotOffset_t    running_slotOffset;
    open_addr_t     temp_neighbor;
-   uint8_t         addr[8];
 
    // reset local variables
    memset(&schedule_vars,0,sizeof(schedule_vars_t));
@@ -45,89 +44,27 @@ void schedule_init() {
          CELLTYPE_ADV,            // type of slot
          FALSE,                   // shared?
          0,                       // channel offset
-         &temp_neighbor,          // neighbor
-         FALSE                    // no update but insert
+         &temp_neighbor,           // neighbor
+         FALSE                     //no update but insert
       );
       running_slotOffset++;
    } 
-
+   
    // shared TXRX anycast slot(s)
    memset(&temp_neighbor,0,sizeof(temp_neighbor));
    temp_neighbor.type             = ADDR_ANYCAST;
-   for (i = 0; i < 1; i++) {
+   for (i=0;i<NUMSHAREDTXRX;i++) {
       schedule_addActiveSlot(
          running_slotOffset,      // slot offset
          CELLTYPE_TXRX,           // type of slot
          TRUE,                    // shared?
          0,                       // channel offset
          &temp_neighbor,          // neighbor
-         FALSE                    // no update but insert
+         FALSE                    //no update but insert
       );
       running_slotOffset++;
    }
-
-   //set the mac-addr
-   memset(&addr[0], 0x14, 1);
-   memset(&addr[1], 0x15, 1);
-   memset(&addr[2], 0x92, 1);
-   memset(&addr[3], 0x00, 1);
-   memset(&addr[4], 0x00, 1);
-   memset(&addr[5], 0x15, 1);
-   memset(&addr[6], 0x16, 1);
-   memset(&addr[7], 0x2d, 1);
-
-   // not-shared RX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
-      FALSE,                   // shared?
-      0,                       // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    // no update but insert
-   );
-   running_slotOffset++;
-
-   // not-shared TX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_TX,             // type of slot
-      FALSE,                   // shared?
-      0,                       // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    // no update but insert
-   );
-   running_slotOffset++;
-
-   // not-shared RX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
-      FALSE,                   // shared?
-      0,                       // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    // no update but insert
-   );
-   running_slotOffset++;
-
-   // not-shared TX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_TX,             // type of slot
-      FALSE,                   // shared?
-      0,                       // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    // no update but insert
-   );
-   running_slotOffset++;
-
+   
    // serial RX slot(s)
    memset(&temp_neighbor,0,sizeof(temp_neighbor));
    schedule_addActiveSlot(
@@ -136,7 +73,7 @@ void schedule_init() {
       FALSE,                      // shared?
       0,                          // channel offset
       &temp_neighbor,             // neighbor
-      FALSE                       // no update but insert
+      FALSE                       //no update but insert
    );
    running_slotOffset++;
    /*
@@ -666,10 +603,14 @@ void schedule_resetEntry(scheduleEntry_t* pScheduleEntry) {
    pScheduleEntry->type                     = CELLTYPE_OFF;
    pScheduleEntry->shared                   = FALSE;
    pScheduleEntry->channelOffset            = 0;
-
    pScheduleEntry->neighbor.type            = ADDR_NONE;
-   memset(&pScheduleEntry->neighbor.addr_64b[0], 0x00, sizeof(pScheduleEntry->neighbor.addr_64b));
-
+   pScheduleEntry->neighbor.addr_64b[0]     = 0x14;
+   pScheduleEntry->neighbor.addr_64b[1]     = 0x15;
+   pScheduleEntry->neighbor.addr_64b[2]     = 0x92;
+   pScheduleEntry->neighbor.addr_64b[3]     = 0x09;
+   pScheduleEntry->neighbor.addr_64b[4]     = 0x02;
+   pScheduleEntry->neighbor.addr_64b[5]     = 0x2c;
+   pScheduleEntry->neighbor.addr_64b[6]     = 0x00;
    pScheduleEntry->numRx                    = 0;
    pScheduleEntry->numTx                    = 0;
    pScheduleEntry->numTxACK                 = 0;

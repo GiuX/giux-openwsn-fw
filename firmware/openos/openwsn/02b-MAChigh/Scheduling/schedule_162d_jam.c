@@ -25,7 +25,7 @@ void schedule_init() {
 
    // reset local variables
    memset(&schedule_vars,0,sizeof(schedule_vars_t));
-   for (i=0;i<MAXACTIVESLOTS;i++){
+   for (i=0;i<MAXACTIVESLOTS;i++) {
       schedule_resetEntry(&schedule_vars.scheduleBuf[i]);
    }
    schedule_vars.backoffExponent = MINBE-1;
@@ -51,21 +51,6 @@ void schedule_init() {
       running_slotOffset++;
    } 
 
-   // shared TXRX anycast slot(s)
-   memset(&temp_neighbor,0,sizeof(temp_neighbor));
-   temp_neighbor.type             = ADDR_ANYCAST;
-   for (i = 0; i < 1; i++) {
-      schedule_addActiveSlot(
-         running_slotOffset,      // slot offset
-         CELLTYPE_TXRX,           // type of slot
-         TRUE,                    // shared?
-         0,                       // channel offset
-         &temp_neighbor,          // neighbor
-         FALSE                    // no update but insert
-      );
-      running_slotOffset++;
-   }
-
    //set the mac-addr
    memset(&addr[0], 0x14, 1);
    memset(&addr[1], 0x15, 1);
@@ -89,12 +74,12 @@ void schedule_init() {
    );
    running_slotOffset++;
 
-   // not-shared RX unicast slot
+   // not-shared TX unicast slot
    memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
    temp_neighbor.type             = ADDR_64B;
       schedule_addActiveSlot(
       running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
+      CELLTYPE_TX,             // type of slot
       FALSE,                   // shared?
       0,                       // channel offset
       &temp_neighbor,          // neighbor
@@ -115,12 +100,12 @@ void schedule_init() {
    );
    running_slotOffset++;
 
-   // not-shared RX unicast slot
+   // not-shared TX unicast slot
    memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
    temp_neighbor.type             = ADDR_64B;
       schedule_addActiveSlot(
       running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
+      CELLTYPE_TX,             // type of slot
       FALSE,                   // shared?
       0,                       // channel offset
       &temp_neighbor,          // neighbor

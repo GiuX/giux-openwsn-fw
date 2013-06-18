@@ -12,3 +12,4 @@ path.txt
 /.sconsign.dblite
 /firmware/openos/bsp/boards/python/*.def
 .directory
+firmware/openos/projects/common/03oos_openwsn_prog

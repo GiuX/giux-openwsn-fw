@@ -254,7 +254,7 @@ enum {
 
 typedef uint16_t  errorparameter_t;
 typedef uint16_t  dagrank_t;
-typedef uint8_t   error_t;
+typedef uint8_t   owerror_t;
 #define bool uint8_t
 
 PRAGMA(pack(1));
@@ -295,7 +295,7 @@ typedef struct {
    open_addr_t   l3_destinationAdd;              // 128b IPv6 destination (down stack) 
    open_addr_t   l3_sourceAdd;                   // 128b IPv6 source address 
    //l2
-   error_t       l2_sendDoneError;               // outcome of trying to send this packet
+   owerror_t       l2_sendDoneError;               // outcome of trying to send this packet
    open_addr_t   l2_nextORpreviousHop;           // 64b IEEE802.15.4 next (down stack) or previous (up) hop address
    uint8_t       l2_frameType;                   // beacon, data, ack, cmd
    uint8_t       l2_dsn;                         // sequence number of the received frame

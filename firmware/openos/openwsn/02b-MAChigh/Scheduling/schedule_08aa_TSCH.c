@@ -113,7 +113,7 @@ void schedule_init() {
       running_slotOffset,      // slot offset
       CELLTYPE_TX,             // type of slot
       FALSE,                   // shared?
-      0,                       // channel offset
+      running_channelOffset,   // channel offset
       &temp_neighbor,          // neighbor
       FALSE                    //no update but insert
    );

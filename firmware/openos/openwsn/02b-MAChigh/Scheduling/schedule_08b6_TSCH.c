@@ -96,7 +96,9 @@ void schedule_init() {
    running_slotOffset++;
    running_channelOffset++;
 
-   //empty slot
+   // empty slot
+   running_slotOffset++;
+   running_channelOffset++;
    running_slotOffset++;
    running_channelOffset++;
 

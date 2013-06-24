@@ -120,6 +120,10 @@ void schedule_init() {
    running_slotOffset++;
    running_channelOffset++;
 
+   // empty slot
+   running_slotOffset++;
+   running_channelOffset++;
+
    // serial RX slot(s)
    memset(&temp_neighbor,0,sizeof(temp_neighbor));
    schedule_addActiveSlot(

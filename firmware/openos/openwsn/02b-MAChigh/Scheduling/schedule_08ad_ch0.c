@@ -36,7 +36,7 @@ void schedule_init() {
    schedule_setFrameLength(SUPERFRAME_LENGTH);
    
    // start at slot 0
-   running_slotOffset = 0;
+   running_slotOffset    = 0;
 
    // start at channel 0
    running_channelOffset = 0;
@@ -49,8 +49,8 @@ void schedule_init() {
          CELLTYPE_ADV,            // type of slot
          FALSE,                   // shared?
          running_channelOffset,   // channel offset
-         &temp_neighbor,         // neighbor
-         FALSE                   //no update but insert
+         &temp_neighbor,          // neighbor
+         FALSE                    //no update but insert
       );
       running_slotOffset++;
    } 
@@ -70,27 +70,8 @@ void schedule_init() {
       running_slotOffset++;
    }
 
-   //set the mac-addr
-   memset(&addr[0], 0x14, 1);
-   memset(&addr[1], 0x15, 1);
-   memset(&addr[2], 0x92, 1);
-   memset(&addr[3], 0x00, 1);
-   memset(&addr[4], 0x00, 1);
-   memset(&addr[5], 0x15, 1);
-   memset(&addr[6], 0x08, 1);
-   memset(&addr[7], 0xb6, 1);
-
-   // not-shared RX unicast slot
-   memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
-   temp_neighbor.type             = ADDR_64B;
-      schedule_addActiveSlot(
-      running_slotOffset,      // slot offset
-      CELLTYPE_RX,             // type of slot
-      FALSE,                   // shared?
-      running_channelOffset,   // channel offset
-      &temp_neighbor,          // neighbor
-      FALSE                    //no update but insert
-   );
+   //empty slot
+   running_slotOffset++;
    running_slotOffset++;
 
    //set the mac-addr
@@ -103,20 +84,17 @@ void schedule_init() {
    memset(&addr[6], 0x15, 1);
    memset(&addr[7], 0x83, 1);
 
-   // not-shared TX unicast slot
+   // not-shared RX unicast slot
    memcpy(&temp_neighbor.addr_64b[0], &addr, 8);
    temp_neighbor.type             = ADDR_64B;
       schedule_addActiveSlot(
       running_slotOffset,      // slot offset
-      CELLTYPE_TX,             // type of slot
+      CELLTYPE_RX,             // type of slot
       FALSE,                   // shared?
       running_channelOffset,   // channel offset
       &temp_neighbor,          // neighbor
       FALSE                    //no update but insert
    );
-   running_slotOffset++;
-
-   // empty slot
    running_slotOffset++;
 
    // serial RX slot(s)

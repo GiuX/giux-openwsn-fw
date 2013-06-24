@@ -20,6 +20,7 @@ void schedule_resetEntry(scheduleEntry_t* pScheduleEntry);
 void schedule_init() {
    uint8_t         i;
    slotOffset_t    running_slotOffset;
+   channelOffset_t running_channelOffset;
    open_addr_t     temp_neighbor;
    uint8_t         addr[8];
 
@@ -36,7 +37,10 @@ void schedule_init() {
    
    // start at slot 0
    running_slotOffset = 0;
-   
+
+   // start at channel 0
+   running_channelOffset = 0;
+
    // advertisement slot(s)
    memset(&temp_neighbor,0,sizeof(temp_neighbor));
    for (i=0;i<NUMADVSLOTS;i++) {
@@ -44,7 +48,7 @@ void schedule_init() {
          running_slotOffset,      // slot offset
          CELLTYPE_ADV,            // type of slot
          FALSE,                   // shared?
-         0,                       // channel offset
+         running_channelOffset,   // channel offset
          &temp_neighbor,          // neighbor
          FALSE                    //no update but insert
       );
@@ -59,7 +63,7 @@ void schedule_init() {
          running_slotOffset,      // slot offset
          CELLTYPE_TXRX,           // type of slot
          TRUE,                    // shared?
-         0,                       // channel offset
+         running_channelOffset,   // channel offset
          &temp_neighbor,          // neighbor
          FALSE                    //no update but insert
       );
@@ -83,13 +87,14 @@ void schedule_init() {
       running_slotOffset,      // slot offset
       CELLTYPE_TX,             // type of slot
       FALSE,                   // shared?
-      0,                       // channel offset
+      running_channelOffset,   // channel offset
       &temp_neighbor,          // neighbor
       FALSE                    //no update but insert
    );
    running_slotOffset++;
 
-   //empty slot
+   // empty slot
+   running_slotOffset++;
    running_slotOffset++;
 
    // serial RX slot(s)

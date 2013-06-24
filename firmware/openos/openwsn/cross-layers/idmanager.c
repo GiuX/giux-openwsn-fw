@@ -28,7 +28,7 @@ void idmanager_init() {
    packetfunctions_mac64bToMac16b(&idmanager_vars.my64bID,&idmanager_vars.my16bID);
 
    // active Bridge mode and DAGRoot on jam in order to use them without OV
-   if (idmanager_vars.my64bID.addr_64b[7] == 0xad) {
+   if (idmanager_vars.my64bID.addr_64b[7] == 0xfc) {
        idmanager_setIsBridge(TRUE);
        idmanager_setIsDAGroot(TRUE);
    }

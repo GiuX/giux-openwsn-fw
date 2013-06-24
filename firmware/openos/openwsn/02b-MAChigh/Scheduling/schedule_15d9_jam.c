@@ -58,8 +58,8 @@ void schedule_init() {
    memset(&addr[3], 0x00, 1);
    memset(&addr[4], 0x00, 1);
    memset(&addr[5], 0x15, 1);
-   memset(&addr[6], 0x08, 1);
-   memset(&addr[7], 0xad, 1);
+   memset(&addr[6], 0x15, 1);
+   memset(&addr[7], 0xfc, 1);
 
    // not-shared TX unicast slot
    memcpy(&temp_neighbor.addr_64b[0], &addr, 8);

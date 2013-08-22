@@ -18,7 +18,7 @@
 
 #define SYNCHRONIZING_CHANNEL       20 // channel the mote listens on to synchronize
 #define TXRETRIES                    3 // number of MAC retries before declaring failed
-#define TX_POWER                    31 // 1=-25dBm, 31=0dBm (max value)
+#define TX_POWER                     1 // 1=-25dBm, 31=0dBm (max value)
 #define RESYNCHRONIZATIONGUARD       5 // in 32kHz ticks. min distance to the end of the slot to succesfully synchronize
 #define US_PER_TICK                 30 // number of us per 32kHz clock tick
 #define KATIMEOUT                   66 // in slots: @15ms per slot -> ~1 seconds
@@ -126,7 +126,7 @@ typedef struct {
    PORT_SIGNED_INT_WIDTH timeCorrection;
 } IEEE802154E_ACK_ht;
 
-#define ADV_PAYLOAD_LENGTH 5
+#define ADV_PAYLOAD_LENGTH 6
 
 //=========================== module variables ================================
 

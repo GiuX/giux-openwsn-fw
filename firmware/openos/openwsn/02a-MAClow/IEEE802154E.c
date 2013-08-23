@@ -422,11 +422,7 @@ port_INLINE void activity_synchronize_newSlot() {
       ieee154e_vars.radioOnThisSlot=TRUE;
       radio_rxNow();
    }
-   
-   if (ieee154e_vars.asn.bytes0and1%SUPERFRAME_LENGTH) {
-      res_incrementMacMgtTaskCounter();
-   }
-   
+
    // increment ASN (used only to schedule serial activity)
    incrementAsnOffset();
    

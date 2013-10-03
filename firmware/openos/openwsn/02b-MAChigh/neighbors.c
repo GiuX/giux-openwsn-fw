@@ -168,7 +168,7 @@ open_addr_t* neighbors_getKANeighbor() {
                    // remove neighbor
                    removeNeighbor(i);
                  } else {
-                   addrOther  = &(neighbors_vars.neighbors[i].addr_64b);
+                   //addrOther  = &(neighbors_vars.neighbors[i].addr_64b);
                    // decrement numAKsent
                    neighbors_vars.neighbors[i].numKA--;
                  }

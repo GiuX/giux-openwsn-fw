@@ -101,7 +101,8 @@ enum {
    STATUS_BACKOFF                      =  7,
    STATUS_QUEUE                        =  8,
    STATUS_NEIGHBORS                    =  9,
-   STATUS_MAX                          = 10,
+   STATUS_ASNSYNCH                     = 10,
+   STATUS_MAX                          = 11,
 };
 
 //component identifiers
@@ -171,7 +172,7 @@ enum {
    COMPONENT_UDPSTORM                  = 0x2e,
    COMPONENT_UDPLATENCY                = 0x2f,
    COMPONENT_TEST                      = 0x30,
-   COMPONENT_R6TUS                    = 0x31,
+   COMPONENT_R6TUS                     = 0x31,
 };
 
 /**
@@ -242,7 +243,7 @@ enum {
    ERR_INVALIDSERIALFRAME              = 0x34, // invalid serial frame
    ERR_INVALIDPACKETFROMRADIO          = 0x35, // invalid packet frome radio, length {1} (code location {0})
    ERR_BUSY_RECEIVING                  = 0x36, // busy receiving when stop of serial activity, buffer input length {1} (code location {0})
-   ERR_WRONG_CRC_INPUT                  = 0x37, // wrong CRC in input Buffer (input length {0})
+   ERR_WRONG_CRC_INPUT                 = 0x37, // wrong CRC in input Buffer (input length {0})
 };
 
 //=========================== typedef =========================================
@@ -291,7 +292,7 @@ typedef struct {
    open_addr_t   l3_destinationAdd;              // 128b IPv6 destination (down stack) 
    open_addr_t   l3_sourceAdd;                   // 128b IPv6 source address 
    //l2
-   owerror_t       l2_sendDoneError;               // outcome of trying to send this packet
+   owerror_t     l2_sendDoneError;               // outcome of trying to send this packet
    open_addr_t   l2_nextORpreviousHop;           // 64b IEEE802.15.4 next (down stack) or previous (up) hop address
    uint8_t       l2_frameType;                   // beacon, data, ack, cmd
    uint8_t       l2_dsn;                         // sequence number of the received frame

@@ -184,7 +184,6 @@ void               ieee154e_getAsn(uint8_t* array);
 void               ieee154e_startOfFrame(PORT_TIMER_WIDTH capturedTime);
 void               ieee154e_endOfFrame(PORT_TIMER_WIDTH capturedTime);
 // misc
-bool               debugPrint_asnSynch();                  // stamp the value of the asn at synch time
 bool               debugPrint_asn();
 bool               debugPrint_isSync();
 bool               debugPrint_macStats();

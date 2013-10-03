@@ -20,7 +20,6 @@
 ieee154e_vars_t    ieee154e_vars;
 ieee154e_stats_t   ieee154e_stats;
 ieee154e_dbg_t     ieee154e_dbg;
-asn_t              asnSynch;                                      // my
 
 //=========================== prototypes ======================================
 
@@ -81,7 +80,6 @@ void     updateStats(PORT_SIGNED_INT_WIDTH timeCorrection);
 uint8_t  calculateFrequency(uint8_t channelOffset);
 void     changeState(ieee154e_state_t newstate);
 void     endSlot();
-bool     debugPrint_asnSynch();                  // stamp the value of the asn at synch time
 bool     debugPrint_asn();
 bool     debugPrint_isSync();
 
@@ -98,7 +96,6 @@ void ieee154e_init() {
    // initialize variables
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
-   memset(&asnSynch,0,sizeof(asn_t));  // variable that stamp the current value of slot for synch time
    
    if (idmanager_getIsDAGroot()==TRUE) {
       changeIsSync(TRUE);
@@ -168,7 +165,7 @@ void isr_ieee154e_newSlot() {
          // executed once in order to stop the synch phase for the DAGRoot
          res_scheduleSwitchTask();
 	 
-         // declare synchronized
+	 // declare synchronized
          changeIsSync(TRUE);
       } else {
          activity_synchronize_newSlot();
@@ -342,13 +339,6 @@ void ieee154e_endOfFrame(PORT_TIMER_WIDTH capturedTime) {
 }
 
 //======= misc
-
-//============================== log ==================================
-bool debugPrint_asnSynch() {
-   openserial_printStatus(STATUS_ASNSYNCH, (uint8_t*)&asnSynch, sizeof(asn_t));
-   return TRUE;
-}
-//============================== log ==================================
 
 /**
 \brief Trigger this module to print status information, over serial.
@@ -566,9 +556,6 @@ port_INLINE void activity_synchronize_endOfFrame(PORT_TIMER_WIDTH capturedTime) 
       //compute radio duty cycle
       ieee154e_vars.radioOnTics+=(radio_getTimerValue()-ieee154e_vars.radioOnInit);
       
-      // record the asn to calculate synch time
-      asnSynch = ieee154e_vars.asn;                                                             // my
-
       // record the ASN from the ADV payload
       asnStoreFromAdv(); //ieee154e_vars.dataReceived
       

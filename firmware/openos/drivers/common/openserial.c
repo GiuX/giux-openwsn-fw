@@ -311,6 +311,10 @@ void openserial_startOutput() {
          if (debugPrint_neighbors()==TRUE) {
             break;
          }
+      case STATUS_ASNSYNCH:                                     // my
+         if (debugPrint_asnSynch()==TRUE) {                     // my
+            break;                                              // my
+         }                                                      // my
       default:
          DISABLE_INTERRUPTS();
          openserial_vars.debugPrintCounter=0;

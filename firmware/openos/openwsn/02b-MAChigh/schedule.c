@@ -40,12 +40,12 @@ void schedule_init() {
    memset(&temp_neighbor,0,sizeof(temp_neighbor));
    for (i=0;i<NUMADVSLOTS;i++) {
       schedule_addActiveSlot(
-         running_slotOffset,      // slot offset
-         CELLTYPE_ADV,            // type of slot
-         FALSE,                   // shared?
-         0,                       // channel offset
+         running_slotOffset,       // slot offset
+         CELLTYPE_ADV,             // type of slot
+         FALSE,                    // shared?
+         openrandom_get16b()&0x0F, // channel offset, set to random channel in order to have TSCH sych sending
          &temp_neighbor,           // neighbor
-         FALSE                     //no update but insert
+         FALSE                     // no update but insert
       );
       running_slotOffset++;
    } 
@@ -60,7 +60,7 @@ void schedule_init() {
          TRUE,                    // shared?
          0,                       // channel offset
          &temp_neighbor,          // neighbor
-         FALSE                    //no update but insert
+         FALSE                    // no update but insert
       );
       running_slotOffset++;
    }
@@ -73,7 +73,7 @@ void schedule_init() {
       FALSE,                      // shared?
       0,                          // channel offset
       &temp_neighbor,             // neighbor
-      FALSE                       //no update but insert
+      FALSE                       // no update but insert
    );
    running_slotOffset++;
    /*
@@ -170,7 +170,7 @@ void schedule_setFrameLength(frameLength_t newFrameLength) {
 }
 
 /**
-\brief get the information of a spcific slot.
+\brief get the information of a specific slot.
 
 \param slotoffset
 \param neighbour address
@@ -188,7 +188,7 @@ void  schedule_getSlotInfo(slotOffset_t   slotOffset,
        if (packetfunctions_sameAddress(neighbor,&(slotContainer->neighbor))&& (slotContainer->slotOffset==slotOffset)){
                //it exists so this is an update.
                info->link_type                 = slotContainer->type;
-               info->shared                    =slotContainer->shared;
+               info->shared                    = slotContainer->shared;
                info->channelOffset             = slotContainer->channelOffset;
                return; //as this is an update. No need to re-insert as it is in the same position on the list.
         }

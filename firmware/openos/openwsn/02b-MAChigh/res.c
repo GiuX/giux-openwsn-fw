@@ -21,18 +21,73 @@ owerror_t res_send_internal(OpenQueueEntry_t* msg);
 void    sendAdv();
 void    sendKa();
 void    res_timer_cb();
+void    res_taskTimer_cb();
 
 //=========================== public ==========================================
 
 void res_init() {
-   res_vars.periodMaintenance = 872+(openrandom_get16b()&0xff); // fires every 1 sec on average
-   res_vars.busySendingKa     = FALSE;
-   res_vars.busySendingAdv    = FALSE;
-   res_vars.dsn               = 0;
-   res_vars.MacMgtTaskCounter = 0;
-   res_vars.timerId = opentimers_start(res_vars.periodMaintenance,
-                                       TIMER_PERIODIC,TIME_MS,
-                                       res_timer_cb);
+    // manage Mac multi-superframe structure
+    // retrieve current ASN
+    //uint8_t* currentAsn;
+    //ieee154e_getAsn(currentAsn);
+
+    // set multi-superframe structure
+    //res_vars.MacMgtTaskCounter = (uint8_t)(currentAsn[4]/SUPERFRAME_LENGTH); // should be added %MULTISUPERFRAME_LENGTH but if the devices are fast at this point the asn should be < MULTISUPERFRAME*SUPERFRAME, needs being checked
+    res_vars.MacMgtTaskCounter = 0; // make the assuption that the init occurs in the first superframe...
+    res_vars.MacMgtTask        = FALSE;
+
+    res_vars.periodMaintenance = 872+(openrandom_get16b()&0xff); // fires every 1 sec on average
+    res_vars.busySendingKa     = FALSE;
+    res_vars.busySendingAdv    = FALSE;
+    res_vars.dsn               = 0;
+    res_vars.timerId           = opentimers_start(res_vars.periodMaintenance,
+                                                 TIMER_PERIODIC,TIME_MS,
+                                                 res_timer_cb);
+}
+
+void res_changeMacMgtTask(bool newTask) {
+    res_vars.MacMgtTask = newTask;
+}
+
+void res_checkMacMgtTask() {
+    if (res_vars.MacMgtTask) {
+        // send an Adv every multi-superframe
+        if (res_vars.MacMgtTaskCounter == 0) sendAdv();
+    } else {
+        // send an Adv every superframe
+        sendAdv();
+    }
+    res_incrementMacMgtTaskCounter();
+}
+
+void res_retrieveMacMgtTaskCounter(uint8_t* counter) {
+    INTERRUPT_DECLARATION();
+    DISABLE_INTERRUPTS();
+    res_vars.MacMgtTaskCounter = (counter[0] + 1)%MULTISUPERFRAME_LENGTH;
+    ENABLE_INTERRUPTS();
+/*    INTERRUPT_DECLARATION();
+    uint8_t*  currentAsn;
+    uint8_t   tempCounter;
+    uint8_t   i;
+    DISABLE_INTERRUPTS();
+    ieee154e_getAsn(currentAsn);
+    for (i=4; i==0; i--) {
+    while (tempCounter<currentAsn[i])
+    tempCounter = (currentAsn[0]/SUPERFRAME_LENGTH);
+    for (i=1; i<sizeof(asn_t); i++) {
+        if (currentAsn[i]!=0) {
+            tempCounter += ((currentAsn[i]/SUPERFRAME_LENGTH)*2^(8*i));
+        }
+    }
+    res_vars.MacMgtTaskCounter = (tempCounter + 1)%MULTISUPERFRAME_LENGTH;
+    ENABLE_INTERRUPTS();*/
+}
+
+void res_incrementMacMgtTaskCounter() {
+    INTERRUPT_DECLARATION();
+    DISABLE_INTERRUPTS();
+    res_vars.MacMgtTaskCounter = (res_vars.MacMgtTaskCounter+1)%MULTISUPERFRAME_LENGTH;
+    ENABLE_INTERRUPTS();
 }
 
 /**
@@ -59,6 +114,12 @@ owerror_t res_send(OpenQueueEntry_t *msg) {
 }
 
 //======= from lower layer
+
+void res_scheduleSwitchTask() {
+    res_vars.taskTimerId = opentimers_start(SYNCHPHASEDURATION,
+                                            TIMER_ONESHOT,TIME_MS,
+                                            res_taskTimer_cb);
+}
 
 void task_resNotifSendDone() {
    OpenQueueEntry_t* msg;
@@ -170,13 +231,17 @@ has fired. This timer is set to fire every second, on average.
 The body of this function executes one of the MAC management task.
 */
 void timers_res_fired() {
-   res_vars.MacMgtTaskCounter = (res_vars.MacMgtTaskCounter+1)%10;
-   if (res_vars.MacMgtTaskCounter==0) {
-      sendAdv(); // called every 10s
-   } else {
+   //res_vars.MacMgtTaskCounter = (res_vars.MacMgtTaskCounter+1)%10;
+   //if (res_vars.MacMgtTaskCounter==0) {
+      //sendAdv(); // called every 10s
+   //} else {
       sendKa();  // called every second, except once every 10s
       //leds_debug_toggle();
-   }
+   //}
+}
+
+void timers_task_fired() {
+    res_changeMacMgtTask(TRUE);
 }
 
 //=========================== private =========================================
@@ -264,8 +329,12 @@ port_INLINE void sendAdv() {
    adv->creator = COMPONENT_RES;
    adv->owner   = COMPONENT_RES;
    
+   // write MacMgtTaskCounter
+   packetfunctions_reserveHeaderSize(adv, 1);
+   adv->payload[0] = res_vars.MacMgtTaskCounter;
+   
    // reserve space for ADV-specific header
-   packetfunctions_reserveHeaderSize(adv, ADV_PAYLOAD_LENGTH);
+   packetfunctions_reserveHeaderSize(adv, 5);
    // the actual value of the current ASN will be written by the
    // IEEE802.15.4e when transmitting
    
@@ -283,7 +352,7 @@ port_INLINE void sendAdv() {
 }
 
 /**
-\brief Send an keep-alive message, if nessary.
+\brief Send an keep-alive message, if necessary.
 
 This is one of the MAC managament tasks. This function inlines in the
 timers_res_fired() function, but is declared as a separate function for better
@@ -345,4 +414,8 @@ port_INLINE void sendKa() {
 
 void res_timer_cb() {
    scheduler_push_task(timers_res_fired,TASKPRIO_RES);
+}
+
+void res_taskTimer_cb() {
+   scheduler_push_task(timers_task_fired,TASKPRIO_RES);
 }

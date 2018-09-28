@@ -13,12 +13,14 @@
 #include "neighbors.h"
 #include "debugpins.h"
 #include "res.h"
+#include "openrandom.h"
 
 //=========================== variables =======================================
 
 ieee154e_vars_t    ieee154e_vars;
 ieee154e_stats_t   ieee154e_stats;
 ieee154e_dbg_t     ieee154e_dbg;
+asn_t              asnSynch;                                      // my
 
 //=========================== prototypes ======================================
 
@@ -64,7 +66,7 @@ bool     isValidAck(ieee802154_header_iht*     ieee802514_header,
                     OpenQueueEntry_t*          packetSent);
 // ASN handling
 void     incrementAsnOffset();
-void     asnStoreFromAdv(OpenQueueEntry_t* advFrame);
+void     asnStoreFromAdv(); //OpenQueueEntry_t* advFrame
 // synchronization
 void     synchronizePacket(PORT_TIMER_WIDTH timeReceived);
 void     synchronizeAck(PORT_SIGNED_INT_WIDTH timeCorrection);
@@ -79,6 +81,7 @@ void     updateStats(PORT_SIGNED_INT_WIDTH timeCorrection);
 uint8_t  calculateFrequency(uint8_t channelOffset);
 void     changeState(ieee154e_state_t newstate);
 void     endSlot();
+bool     debugPrint_asnSynch();                  // stamp the value of the asn at synch time
 bool     debugPrint_asn();
 bool     debugPrint_isSync();
 
@@ -95,6 +98,7 @@ void ieee154e_init() {
    // initialize variables
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
+   memset(&asnSynch,0,sizeof(asn_t));  // variable that stamp the current value of slot for synch time
    
    if (idmanager_getIsDAGroot()==TRUE) {
       changeIsSync(TRUE);
@@ -161,6 +165,10 @@ void isr_ieee154e_newSlot() {
    radio_setTimerPeriod(TsSlotDuration);
    if (ieee154e_vars.isSync==FALSE) {
       if (idmanager_getIsDAGroot()==TRUE) {
+         // executed once in order to stop the synch phase for the DAGRoot
+         res_scheduleSwitchTask();
+	 
+         // declare synchronized
          changeIsSync(TRUE);
       } else {
          activity_synchronize_newSlot();
@@ -335,6 +343,13 @@ void ieee154e_endOfFrame(PORT_TIMER_WIDTH capturedTime) {
 
 //======= misc
 
+//============================== log ==================================
+bool debugPrint_asnSynch() {
+   openserial_printStatus(STATUS_ASNSYNCH, (uint8_t*)&asnSynch, sizeof(asn_t));
+   return TRUE;
+}
+//============================== log ==================================
+
 /**
 \brief Trigger this module to print status information, over serial.
 
@@ -404,12 +419,12 @@ port_INLINE void activity_synchronize_newSlot() {
       
       // turn off the radio (in case it wasn't yet)
       radio_rfOff();
-      
-      // configure the radio to listen to the default synchronizing channel
-      radio_setFrequency(SYNCHRONIZING_CHANNEL);
-      
+
       // update record of current channel
-      ieee154e_vars.freq = SYNCHRONIZING_CHANNEL;
+      ieee154e_vars.freq = calculateFrequency(openrandom_get16b()&0x0F);                                   // my
+
+      // configure the radio to listen to the synchronizing channel
+      radio_setFrequency(ieee154e_vars.freq);                                                              // my
       
       // switch on the radio in Rx mode.
       radio_rxEnable();
@@ -417,7 +432,7 @@ port_INLINE void activity_synchronize_newSlot() {
       ieee154e_vars.radioOnThisSlot=TRUE;
       radio_rxNow();
    }
-   
+
    // increment ASN (used only to schedule serial activity)
    incrementAsnOffset();
    
@@ -551,11 +566,22 @@ port_INLINE void activity_synchronize_endOfFrame(PORT_TIMER_WIDTH capturedTime) 
       //compute radio duty cycle
       ieee154e_vars.radioOnTics+=(radio_getTimerValue()-ieee154e_vars.radioOnInit);
       
+      // record the asn to calculate synch time
+      asnSynch = ieee154e_vars.asn;                                                             // my
+
       // record the ASN from the ADV payload
-      asnStoreFromAdv(ieee154e_vars.dataReceived);
+      asnStoreFromAdv(); //ieee154e_vars.dataReceived
       
       // toss the ADV payload
-      packetfunctions_tossHeader(ieee154e_vars.dataReceived,ADV_PAYLOAD_LENGTH);
+      packetfunctions_tossHeader(ieee154e_vars.dataReceived, 5);                                // my
+      
+      // retrieve MacMgtTaskCounter
+      res_retrieveMacMgtTaskCounter(ieee154e_vars.dataReceived->payload);                       // my
+      packetfunctions_tossHeader(ieee154e_vars.dataReceived, 1);                                // my
+      
+      // switch beetween these two function in order to allow fast synch for low density network
+      res_changeMacMgtTask(TRUE);                                                               // my
+      //res_scheduleSwitchTask();
       
       // synchronize (for the first time) to the sender's ADV
       synchronizePacket(ieee154e_vars.syncCapturedTime);
@@ -665,14 +691,20 @@ port_INLINE void activity_ti1ORri1() {
       case CELLTYPE_ADV:
          // stop using serial
          openserial_stop();
+         // check res_MacMgtTask
+         res_checkMacMgtTask();                                                                       // my
          // look for an ADV packet in the queue
          ieee154e_vars.dataToSend = openqueue_macGetAdvPacket();
-         if (ieee154e_vars.dataToSend==NULL) {   // I will be listening for an ADV
-            // change state
-            changeState(S_RXDATAOFFSET);
-            // arm rt1
-            radiotimer_schedule(DURATION_rt1);
-         } else {                                // I will be sending an ADV
+         if (ieee154e_vars.dataToSend==NULL) {        // ADV sending are synchronized, nothing to do
+            // ending slot, S_SLEEP state will be set to the end of this function for powersafe
+/*            endSlot();
+            // set radiotimer
+            radio_setTimerPeriod(TsSlotDuration);*/ // maybe unuseful, copied by serialrx but need testing because this is setted by isr_ieee154e_newSlot
+             // change state
+             changeState(S_RXDATAOFFSET);
+             // arm rt1
+             radiotimer_schedule(DURATION_rt1);
+         } else {                                     // I will be sending an ADV
             // change state
             changeState(S_TXDATAOFFSET);
             // change owner
@@ -1086,7 +1118,7 @@ port_INLINE void activity_ti9(PORT_TIMER_WIDTH capturedTime) {
 //======= RX
 
 port_INLINE void activity_ri2() {
-	// change state
+   // change state
    changeState(S_RXDATAPREPARE);
    
    // calculate the frequency to transmit on
@@ -1248,10 +1280,16 @@ port_INLINE void activity_ri5(PORT_TIMER_WIDTH capturedTime) {
       // if I just received a valid ADV, record the ASN and toss the ADV payload
       if (isValidAdv(&ieee802514_header)==TRUE) {
          if (idmanager_getIsDAGroot()==FALSE) {
-            asnStoreFromAdv(ieee154e_vars.dataReceived);
+            asnStoreFromAdv(); // ieee154e_vars.dataReceived
+            // toss the ADV payload
+            packetfunctions_tossHeader(ieee154e_vars.dataReceived, 5);                       // my
+            
+            // retrieve MacMgtTaskCounter
+            res_retrieveMacMgtTaskCounter(ieee154e_vars.dataReceived->payload);              // my
+            packetfunctions_tossHeader(ieee154e_vars.dataReceived, 1);
+         } else {
+             packetfunctions_tossHeader(ieee154e_vars.dataReceived, ADV_PAYLOAD_LENGTH);
          }
-         // toss the ADV payload
-         packetfunctions_tossHeader(ieee154e_vars.dataReceived,ADV_PAYLOAD_LENGTH);
       }
       
       // record the captured time
@@ -1558,7 +1596,7 @@ port_INLINE void ieee154e_getAsn(uint8_t* array) {
    array[4]         =  ieee154e_vars.asn.byte4;
 }
 
-port_INLINE void asnStoreFromAdv(OpenQueueEntry_t* advFrame) {
+port_INLINE void asnStoreFromAdv() { //OpenQueueEntry_t* advFrame
    
    // store the ASN
    ieee154e_vars.asn.bytes0and1   =     ieee154e_vars.dataReceived->payload[0]+
@@ -1580,7 +1618,7 @@ port_INLINE void asnStoreFromAdv(OpenQueueEntry_t* advFrame) {
    infer the asnOffset based on the fact that
    ieee154e_vars.freq = 11 + (asnOffset + channelOffset)%16 
    */
-   ieee154e_vars.asnOffset = ieee154e_vars.freq - 11 - schedule_getChannelOffset();
+   ieee154e_vars.asnOffset = (uint8_t)(ieee154e_vars.asn.bytes0and1 & 0x0f);            // replaced modulo operator with AND mask
 }
 
 //======= synchronization
@@ -1737,8 +1775,8 @@ different channel offsets in the same slot.
 */
 port_INLINE uint8_t calculateFrequency(uint8_t channelOffset) {
    // comment the following line out to disable channel hopping
-   return SYNCHRONIZING_CHANNEL; // single channel
-   //return 11+(ieee154e_vars.asnOffset+channelOffset)%16; //channel hopping
+   //return SYNCHRONIZING_CHANNEL; // single channel
+   return 11+(ieee154e_vars.asnOffset+channelOffset)%16; //channel hopping
 }
 
 /**

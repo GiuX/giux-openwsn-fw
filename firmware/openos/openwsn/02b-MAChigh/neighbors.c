@@ -151,11 +151,27 @@ open_addr_t* neighbors_getKANeighbor() {
             // this neighbor needs to be KA'ed to
             if (neighbors_vars.neighbors[i].parentPreference==MAXPREFERENCE) {
                // its a preferred parent
-               addrPreferred = &(neighbors_vars.neighbors[i].addr_64b);
+               if (neighbors_vars.neighbors[i].numKA==0) {
+                  // remove neighbor
+                  removeNeighbor(i);
+                } else {
+                  addrPreferred = &(neighbors_vars.neighbors[i].addr_64b);
+                  // decrement numAKsent
+                  neighbors_vars.neighbors[i].numKA--;
+                }
             } else {
                // its not a preferred parent
                // Note: commented out since policy is not to KA to non-preferred parents
                // addrOther =     &(neighbors_vars.neighbors[i].addr_64b);
+                // its a preferred parent
+                if (neighbors_vars.neighbors[i].numKA==0) {
+                   // remove neighbor
+                   removeNeighbor(i);
+                 } else {
+                   //addrOther  = &(neighbors_vars.neighbors[i].addr_64b);
+                   // decrement numAKsent
+                   neighbors_vars.neighbors[i].numKA--;
+                 }
             }
          }
       }
@@ -319,9 +335,10 @@ void neighbors_indicateRx(open_addr_t* l2_src,
          // this is not a new neighbor
          newNeighbor = FALSE;
          
-         // update numRx, rssi, asn
+         // update numRx, rssi, asn, numAKsent
          neighbors_vars.neighbors[i].numRx++;
-         neighbors_vars.neighbors[i].rssi=rssi;
+         neighbors_vars.neighbors[i].rssi      = rssi;
+         neighbors_vars.neighbors[i].numKA     = MAXKANUM;
          memcpy(&neighbors_vars.neighbors[i].asn,asnTs,sizeof(asn_t));
          
          // update stableNeighbor, switchStabilityCounter
@@ -606,7 +623,9 @@ void registerNewNeighbor(open_addr_t* address,
             neighbors_vars.neighbors[i].numRx                  = 1;
             neighbors_vars.neighbors[i].numTx                  = 0;
             neighbors_vars.neighbors[i].numTxACK               = 0;
+            neighbors_vars.neighbors[i].numKA                  = MAXKANUM;
             memcpy(&neighbors_vars.neighbors[i].asn,asnTimestamp,sizeof(asn_t));
+
             // do I already have a preferred parent ?
             iHaveAPreferedParent = FALSE;
             for (j=0;j<MAXNUMNEIGHBORS;j++) {
@@ -655,6 +674,7 @@ void removeNeighbor(uint8_t neighborIndex) {
    neighbors_vars.neighbors[neighborIndex].numRx                     = 0;
    neighbors_vars.neighbors[neighborIndex].numTx                     = 0;
    neighbors_vars.neighbors[neighborIndex].numTxACK                  = 0;
+   neighbors_vars.neighbors[neighborIndex].numKA                     = 0;
    neighbors_vars.neighbors[neighborIndex].asn.bytes0and1            = 0;
    neighbors_vars.neighbors[neighborIndex].asn.bytes2and3            = 0;
    neighbors_vars.neighbors[neighborIndex].asn.byte4                 = 0;

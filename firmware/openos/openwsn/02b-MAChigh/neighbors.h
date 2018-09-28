@@ -16,6 +16,7 @@
 #define MAXPREFERENCE             2
 #define BADNEIGHBORMAXRSSI        -80 //dBm
 #define GOODNEIGHBORMINRSSI       -90 //dBm
+#define MAXKANUM                  10
 #define SWITCHSTABILITYTHRESHOLD  3
 #define DEFAULTLINKCOST           15
 
@@ -36,6 +37,7 @@ typedef struct {
    uint8_t          numRx;
    uint8_t          numTx;
    uint8_t          numTxACK;
+   uint8_t          numKA;
    uint8_t          numWraps;//number of times the tx counter wraps. can be removed if memory is a restriction. also check openvisualizer then.
    asn_t            asn;
 } neighborRow_t;
